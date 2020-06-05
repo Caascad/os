@@ -40,7 +40,7 @@ _switch() {
 
 _parse() {
 	if [[ "$#" -eq 0 ]]; then 
-		cat "~/.config/caos/current"; 
+		cat ~/.config/caos/current; 
 		exit 0; 
   fi
 	case "$1" in
