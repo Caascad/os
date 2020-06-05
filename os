@@ -6,14 +6,14 @@ NAME
       Thin wrapper around openstack command
 
 SYNOPSIS
-      caos [caos-command] [environment]
-			caos <openstack subcommand>
+      os [os-command] [environment]
+			os <openstack subcommand>
 
 DESCRIPTION
       <empty>
 			      Prints the environment selected
 
-      caos_help | ch
+      os_help | ch
             Prints this help
 
       switch | s
@@ -30,21 +30,21 @@ EOF
 }
 
 _init() {
-  mkdir -p ~/.config/caos
-	touch ~/.config/caos/current
+  mkdir -p ~/.config/os
+	touch ~/.config/os/current
 	}
 
 _switch() {
-	echo "$1" > ~/.config/caos/current
+	echo "$1" > ~/.config/os/current
 	}
 
 _parse() {
 	if [[ "$#" -eq 0 ]]; then 
-		cat ~/.config/caos/current; 
+		cat ~/.config/os/current; 
 		exit 0; 
   fi
 	case "$1" in
-		caos_help|ch)
+		os_help|ch)
 		  _help;;
 		print|p)
 		  _get_secrets;
@@ -66,7 +66,7 @@ _print() {
 	}
 
 _get_secrets() {
-	ZONE_NAME=$(cat ~/.config/caos/current)
+	ZONE_NAME=$(cat ~/.config/os/current)
   secret=$(VAULT_ADDR=${VAULT_ADDR} vault read secret/zones/fe/${ZONE_NAME}/api -format=json)
   export  OS_AUTH_URL=https://iam.eu-west-0.prod-cloud-ocb.orange-business.com/v3
   export  OS_USERNAME=$(echo $secret| jq -r .data.username)

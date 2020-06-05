@@ -6,17 +6,17 @@
 with pkgs;
 
 stdenv.mkDerivation rec {
-  pname = "caos";
+  pname = "os";
   version = "1.0.0";
 
   unpackPhase = ":";
   installPhase = ''
-    install -m755 -D ${./caos} $out/bin/caos
+    install -m755 -D ${./os} $out/bin/os
   '';
 
   meta = with stdenv.lib; {
     description = "Wrapper around openstack";
-    homepage = "https://github.com/Caascad/caos";
+    homepage = "https://github.com/Caascad/os";
     license = licenses.mit;
     maintainers = with maintainers; [ "Benjile" ];
   };
