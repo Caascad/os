@@ -22,5 +22,17 @@
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs-channels/archive/2efedf8fc74e8056f81bd18899276b085becf6dc.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "toolbox": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "Caascad",
+        "repo": "toolbox",
+        "rev": "da54ca3bbb4a82e2314a8607a7d23b6417663bd0",
+        "sha256": "1p9rswrrra15f9719cnmhwzlclh2r80q5i8gr65zh9rkgvjxbl52",
+        "type": "tarball",
+        "url": "https://github.com/Caascad/toolbox/archive/da54ca3bbb4a82e2314a8607a7d23b6417663bd0.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
