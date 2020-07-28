@@ -2,8 +2,12 @@
 
 set -euo pipefail
 
-export VAULT_ADDR=${VAULT_ADDR:-"https://vault.infra-stg.caascad.com"}
-export VAULT_FORMAT=json
+export VAULT_FORMAT="json"
+CONFIG="${HOME}/.config/caascad"
+OS_CONFIG="${CONFIG}/os"
+CAASCAD_ZONES_URL="https://git.corp.cloudwatt.com/caascad/caascad-zones/raw/master/zones.json"
+CAASCAD_ZONES_FILE="${CONFIG}/caascad-zones.json"
+CURRENT_FILE="${OS_CONFIG}/current"
 
 _help() {
     cat <<EOF
@@ -24,8 +28,9 @@ DESCRIPTION
       switch | s
             Change the environment selected to issue openstack commands
 
-      print | p
-            Prints openstack environment variables used
+      print | p [-u]
+            Prints openstack environment variables used.
+            Obfuscates password unless -u parameter is used.
 
       <openstack-subcommand>
             Standard openstack subcommands, token issue, server list
@@ -35,17 +40,30 @@ EOF
 }
 
 _init() {
-    mkdir -p ~/.config/os
-    touch ~/.config/os/current
+    mkdir -p "${OS_CONFIG}"
+    touch "${CURRENT_FILE}"
+    _refresh
+}
+
+_is_local () {
+  [[ -f "$1" ]]
+}
+
+_refresh() {
+    if _is_local "${CAASCAD_ZONES_URL}"; then
+      cp "${CAASCAD_ZONES_URL}" "${CAASCAD_ZONES_FILE}"
+    else
+      curl -s "${CAASCAD_ZONES_URL}" -o "${CAASCAD_ZONES_FILE}"
+    fi
 }
 
 _switch() {
-    echo "$1" > ~/.config/os/current
+    echo "${1}" > "${CURRENT_FILE}"
 }
 
 _parse() {
     if [[ "$#" -eq 0 ]]; then
-        cat ~/.config/os/current;
+        cat "${CURRENT_FILE}";
         exit 0;
     fi
     case "$1" in
@@ -53,8 +71,11 @@ _parse() {
             _help
             ;;
         print|p)
-            _get_secrets;
-            _print
+            _get_secrets
+            _print "${@:2}"
+            ;;
+        refresh|r)
+            _refresh;
             ;;
         switch|s)
             if [[ "$#" -eq 2 ]]; then
@@ -64,19 +85,26 @@ _parse() {
             fi
             ;;
         *)
-            _get_secrets;
+            _get_secrets
             openstack "$@"
             ;;
     esac
 }
 
 _print() {
-    env | grep -e ^OS_ | sed 's/OS_PASSWORD=.*/OS_PASSWORD=XXX/g'
+    OSVARS=$(env | grep -e ^OS_)
+    if [[ "$@" != "-u" ]]; then
+      OSVARS=$(echo "${OSVARS}"| sed 's/OS_PASSWORD=.*/OS_PASSWORD=XXX/g')
+    fi
+    echo "${OSVARS}"
 }
 
 _get_secrets() {
-    ZONE_NAME=$(cat ~/.config/os/current)
+    ZONE_NAME=$(cat "${CURRENT_FILE}")
     [ -z "${ZONE_NAME}" ] && echo "No environment selected. Use 'os switch <env> first.'" && exit 1
+    INFRA_ZONE_NAME="$(cat ${CAASCAD_ZONES_FILE}|jq -r '."'${ZONE_NAME}'".infra_zone_name')"
+    DOMAIN_NAME="$(cat ${CAASCAD_ZONES_FILE}|jq -r '."'${ZONE_NAME}'".domain_name')"
+    export VAULT_ADDR="https://vault.${INFRA_ZONE_NAME}.${DOMAIN_NAME}"
     >&2 echo "Using ${VAULT_ADDR}"
     >&2 echo "Looking for ${ZONE_NAME} secrets"
     if [[ $ZONE_NAME =~ ^OCB000.* ]]; then
