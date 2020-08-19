@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     install -m755 -D ${./os} $out/bin/os
-    wrapProgram $out/bin/os --prefix PATH ":" ${with tbox; makeBinPath [ openstackclient vault ]}
+    wrapProgram $out/bin/os --prefix PATH ":" ${with tbox; makeBinPath [ openstackclient vault curl jq ]}
   '';
 
   meta = with stdenv.lib; {
