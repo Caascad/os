@@ -103,9 +103,15 @@ _print() {
 
 _get_secrets() {
     ZONE_NAME=$(cat "${CURRENT_FILE}")
+    export ZONE_NAME
     [ -z "${ZONE_NAME}" ] && echo "No environment selected. Use 'os switch <env> first.'" && exit 1
-    INFRA_ZONE_NAME="$(jq -r '."'"${ZONE_NAME}"'".infra_zone_name' < "${CAASCAD_ZONES_FILE}")"
-    DOMAIN_NAME="$(jq -r '."'"${ZONE_NAME}"'".domain_name' < "${CAASCAD_ZONES_FILE}")"
+    if [[ $ZONE_NAME =~ ^OCB000.* ]]; then
+        INFRA_ZONE_NAME="$(jq -r '.[] | select(.providers.fe.domain_name == env.ZONE_NAME) | .name' < "${CAASCAD_ZONES_FILE}" )"
+        DOMAIN_NAME="$(jq -r '.[] | select(.providers.fe.domain_name == env.ZONE_NAME) | .domain_name' < "${CAASCAD_ZONES_FILE}" )"
+    else
+        INFRA_ZONE_NAME="$(jq -r '.[env.ZONE_NAME].infra_zone_name' < "${CAASCAD_ZONES_FILE}")"
+        DOMAIN_NAME="$(jq -r '.[env.ZONE_NAME].domain_name' < "${CAASCAD_ZONES_FILE}")"
+    fi
     export VAULT_ADDR="https://vault.${INFRA_ZONE_NAME}.${DOMAIN_NAME}"
     >&2 echo "Using ${VAULT_ADDR}"
     >&2 echo "Looking for ${ZONE_NAME} secrets"
