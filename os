@@ -28,7 +28,7 @@ DESCRIPTION
       switch | s
             Change the environment selected to issue openstack commands
 
-      print | p [-u]
+      print | p [-u] [-e]
             Prints openstack environment variables used.
             Obfuscates password unless -u parameter is used.
 
@@ -93,10 +93,26 @@ _parse() {
 
 _print() {
     OSVARS=$(env | grep -e ^OS_)
-    # shellcheck disable=SC2199
-    if [[ "${@}" != "-u" ]]; then
+    HIDE=true
+    EXPORT=false
+    while [[ $# -gt 0 ]]; do
+      case ${1} in
+        -u)
+          HIDE=false
+          shift
+          ;;
+        -e)
+          EXPORT=true
+          shift
+          ;;
+      esac
+    done
+    if "${HIDE}";  then
       # shellcheck disable=SC2001
       OSVARS=$(echo "${OSVARS}"| sed 's/OS_PASSWORD=.*/OS_PASSWORD=XXX/g')
+    fi
+    if "${EXPORT}"; then
+      OSVARS=$(echo "${OSVARS}"| sed 's/\(^.*=.*$\)/export \1/g')
     fi
     echo "${OSVARS}"
 }
